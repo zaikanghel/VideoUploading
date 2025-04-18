@@ -27,25 +27,54 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Hero Section */}
-      <section className="mb-12 text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Share Your Videos Easily</h2>
-        <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-          Upload videos of any size, get an embed code instantly, and share with anyone - no account required.
-        </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <button
-            onClick={scrollToUpload}
-            className="bg-primary hover:bg-blue-600 text-white font-medium px-6 py-3 rounded-lg transition-colors flex items-center"
-          >
-            <i className="ri-upload-cloud-2-line mr-2"></i>
-            Upload Video
-          </button>
-          <a
-            href="#recent-videos"
-            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-6 py-3 rounded-lg transition-colors"
-          >
-            View Recent Videos
-          </a>
+      <section className="mb-16 py-12 px-4 sm:px-6 lg:px-8 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 text-white shadow-lg overflow-hidden relative">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+          <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white"></div>
+          <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white"></div>
+          <div className="absolute top-1/3 right-1/4 w-20 h-20 rounded-full bg-white"></div>
+        </div>
+        
+        <div className="relative z-10">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Share Your Videos <span className="block">Without Limits</span>
+          </h2>
+          <p className="text-blue-100 max-w-2xl mx-auto mb-10 text-lg">
+            Upload videos of any size, get an embed code instantly, and share with anyone - 
+            <span className="font-semibold bg-blue-200 text-blue-800 px-2 py-1 rounded mx-1">no account required</span>
+          </p>
+          
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              onClick={scrollToUpload}
+              className="bg-white text-blue-600 hover:bg-blue-50 font-bold px-8 py-4 rounded-lg transition-colors flex items-center shadow-md transform hover:scale-105 transition-transform"
+            >
+              <i className="ri-upload-cloud-2-line mr-2 text-xl"></i>
+              Upload Video
+            </button>
+            <a
+              href="#recent-videos"
+              className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-8 py-4 rounded-lg transition-colors border border-blue-400"
+            >
+              <i className="ri-play-circle-line mr-2 text-xl"></i>
+              View Recent Videos
+            </a>
+          </div>
+          
+          <div className="mt-10 flex justify-center space-x-8 text-blue-100">
+            <div className="flex flex-col items-center">
+              <i className="ri-infinite-line text-2xl mb-2"></i>
+              <span className="text-sm">Unlimited Size</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <i className="ri-timer-line text-2xl mb-2"></i>
+              <span className="text-sm">Fast Processing</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <i className="ri-share-line text-2xl mb-2"></i>
+              <span className="text-sm">Easy Sharing</span>
+            </div>
+          </div>
         </div>
       </section>
 
