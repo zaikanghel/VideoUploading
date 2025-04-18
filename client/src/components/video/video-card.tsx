@@ -45,10 +45,22 @@ export default function VideoCard({ video }: VideoCardProps) {
   };
 
   // Generate placeholder thumbnail based on video title
-  const generateThumbnail = (title: string): string => {
-    // Use a placeholder image generator service
+  const generateThumbnail = (title: string, videoId: string): string => {
+    // Use a placeholder image that looks more like a video thumbnail
+    // Creating a deterministic color for each video based on videoId
+    const hash = videoId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    const h = Math.abs(hash) % 360;
+    const s = 50 + (Math.abs(hash) % 30); // Between 50-80%
+    const l = 55 + (Math.abs(hash) % 15); // Between 55-70%
+    
+    const colorHsl = `hsl(${h}, ${s}%, ${l}%)`;
+    const textColor = l > 65 ? '333333' : 'FFFFFF';
+    
     const sanitizedTitle = encodeURIComponent(title.substring(0, 20));
-    return `https://via.placeholder.com/600x340/3B82F6/FFFFFF?text=${sanitizedTitle}`;
+    return `https://via.placeholder.com/600x340/${colorHsl.replace('#', '')}/FFFFFF?text=${sanitizedTitle}`;
   };
 
   // Delete video mutation
@@ -99,117 +111,153 @@ export default function VideoCard({ video }: VideoCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden transform hover:-translate-y-1 group/card">
       <Link href={`/video/${video.videoId}`}>
         <a className="block relative">
-          <img 
-            src={generateThumbnail(video.title)}
-            alt={video.title} 
-            className="w-full aspect-video object-cover"
-          />
-          {video.duration && (
-            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-              {formatDuration(video.duration)}
+          <div className="aspect-video relative overflow-hidden bg-gray-100">
+            <img 
+              src={generateThumbnail(video.title, video.videoId)}
+              alt={video.title} 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105"
+            />
+            
+            {/* Play button overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity">
+              <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center transform -translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 shadow-lg">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center ml-1">
+                  <i className="ri-play-fill text-3xl text-white"></i>
+                </div>
+              </div>
             </div>
-          )}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black bg-opacity-50">
-            <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center">
-              <i className="ri-play-fill text-3xl text-primary"></i>
-            </div>
+            
+            {/* Format badge */}
+            {video.format && (
+              <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md uppercase tracking-wider font-medium">
+                {video.format}
+              </div>
+            )}
+            
+            {/* Duration badge */}
+            {video.duration && (
+              <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md font-medium">
+                {formatDuration(video.duration)}
+              </div>
+            )}
           </div>
         </a>
       </Link>
-      <div className="p-4">
+      
+      <div className="p-5">
         <Link href={`/video/${video.videoId}`}>
           <a className="block">
-            <h4 className="font-medium mb-1 truncate hover:text-primary transition-colors">
+            <h3 className="font-bold text-lg mb-2 text-gray-800 hover:text-primary transition-colors line-clamp-2">
               {video.title}
-            </h4>
+            </h3>
           </a>
         </Link>
-        <div className="flex justify-between items-center text-sm text-gray-500">
-          <span>Uploaded {getTimeAgo(video.createdAt)}</span>
-          <span className="flex items-center">
-            <i className="ri-eye-line mr-1"></i> {video.views}
-          </span>
+        
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center text-white">
+              <i className="ri-user-fill text-sm"></i>
+            </div>
+            <span className="text-sm text-gray-600 ml-2">Anonymous</span>
+          </div>
+          <div className="text-sm text-gray-500">
+            {getTimeAgo(video.createdAt)}
+          </div>
         </div>
-        <div className="flex mt-3 pt-3 border-t border-gray-100 text-sm">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="text-gray-600 hover:text-primary transition-colors mr-3">
-                <i className="ri-link"></i> Share
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72">
-              <div className="space-y-2">
-                <h5 className="font-medium text-sm">Share Video</h5>
-                <div className="flex flex-col space-y-1.5">
-                  <label className="text-xs text-gray-500">Direct Link</label>
-                  <div className="flex">
-                    <input 
-                      className="flex-1 px-2 py-1 text-xs border rounded-l-md" 
-                      value={getDirectLink()}
-                      readOnly
-                    />
-                    <button 
-                      className="px-2 border border-l-0 rounded-r-md hover:bg-gray-50"
-                      onClick={() => copyToClipboard(getDirectLink(), "Link copied to clipboard")}
-                    >
-                      <i className="ri-clipboard-line"></i>
+        
+        <div className="flex items-center text-sm text-gray-500 mb-4">
+          <div className="bg-blue-50 text-blue-600 py-1 px-2 rounded-full flex items-center mr-4">
+            <i className="ri-eye-line mr-1"></i> {video.views}
+          </div>
+          {video.resolution && (
+            <div className="bg-gray-100 text-gray-700 py-1 px-2 rounded-full flex items-center">
+              <i className="ri-hd-line mr-1"></i> {video.resolution}
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-between pt-4 border-t border-gray-100">
+          <div className="flex">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="text-gray-700 hover:text-primary transition-colors mr-4 flex items-center">
+                  <i className="ri-share-line mr-1"></i> Share
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72">
+                <div className="space-y-3">
+                  <h5 className="font-semibold text-sm">Share Video</h5>
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-xs text-gray-500">Direct Link</label>
+                    <div className="flex">
+                      <input 
+                        className="flex-1 px-2 py-1 text-xs border rounded-l-md" 
+                        value={getDirectLink()}
+                        readOnly
+                      />
+                      <button 
+                        className="px-2 border border-l-0 rounded-r-md hover:bg-gray-50"
+                        onClick={() => copyToClipboard(getDirectLink(), "Link copied to clipboard")}
+                      >
+                        <i className="ri-clipboard-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2 pt-2">
+                    <button className="w-8 h-8 rounded-full bg-[#1877F2] hover:bg-blue-600 text-white flex items-center justify-center transition-colors shadow-sm hover:shadow">
+                      <i className="ri-facebook-fill"></i>
+                    </button>
+                    <button className="w-8 h-8 rounded-full bg-[#1DA1F2] hover:bg-blue-500 text-white flex items-center justify-center transition-colors shadow-sm hover:shadow">
+                      <i className="ri-twitter-fill"></i>
+                    </button>
+                    <button className="w-8 h-8 rounded-full bg-[#0A66C2] hover:bg-blue-700 text-white flex items-center justify-center transition-colors shadow-sm hover:shadow">
+                      <i className="ri-linkedin-fill"></i>
+                    </button>
+                    <button className="w-8 h-8 rounded-full bg-[#25D366] hover:bg-green-500 text-white flex items-center justify-center transition-colors shadow-sm hover:shadow">
+                      <i className="ri-whatsapp-fill"></i>
                     </button>
                   </div>
                 </div>
-                <div className="flex space-x-2 pt-2">
-                  <button className="w-8 h-8 rounded-full bg-[#1877F2] hover:bg-blue-600 text-white flex items-center justify-center transition-colors">
-                    <i className="ri-facebook-fill"></i>
-                  </button>
-                  <button className="w-8 h-8 rounded-full bg-[#1DA1F2] hover:bg-blue-500 text-white flex items-center justify-center transition-colors">
-                    <i className="ri-twitter-fill"></i>
-                  </button>
-                  <button className="w-8 h-8 rounded-full bg-[#0A66C2] hover:bg-blue-700 text-white flex items-center justify-center transition-colors">
-                    <i className="ri-linkedin-fill"></i>
-                  </button>
-                  <button className="w-8 h-8 rounded-full bg-[#25D366] hover:bg-green-500 text-white flex items-center justify-center transition-colors">
-                    <i className="ri-whatsapp-fill"></i>
-                  </button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="text-gray-600 hover:text-primary transition-colors mr-3">
-                <i className="ri-code-line"></i> Embed
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="space-y-2">
-                <h5 className="font-medium text-sm">Embed Video</h5>
-                <div className="flex flex-col space-y-1.5">
-                  <label className="text-xs text-gray-500">Embed Code</label>
-                  <div className="flex">
-                    <textarea 
-                      className="flex-1 px-2 py-1 text-xs border rounded-l-md h-20 font-mono"
-                      value={getEmbedCode()}
-                      readOnly
-                    />
-                    <button 
-                      className="px-2 border border-l-0 rounded-r-md hover:bg-gray-50 self-stretch"
-                      onClick={() => copyToClipboard(getEmbedCode(), "Embed code copied to clipboard")}
-                    >
-                      <i className="ri-clipboard-line"></i>
-                    </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="text-gray-700 hover:text-primary transition-colors flex items-center">
+                  <i className="ri-code-line mr-1"></i> Embed
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-3">
+                  <h5 className="font-semibold text-sm">Embed Video</h5>
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-xs text-gray-500">Embed Code</label>
+                    <div className="flex">
+                      <textarea 
+                        className="flex-1 px-2 py-1 text-xs border rounded-l-md h-20 font-mono"
+                        value={getEmbedCode()}
+                        readOnly
+                      />
+                      <button 
+                        className="px-2 border border-l-0 rounded-r-md hover:bg-gray-50 self-stretch"
+                        onClick={() => copyToClipboard(getEmbedCode(), "Embed code copied to clipboard")}
+                      >
+                        <i className="ri-clipboard-line"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="text-gray-600 hover:text-red-500 transition-colors ml-auto">
-                <i className="ri-delete-bin-line"></i>
+              <button className="text-gray-700 hover:text-red-500 transition-colors flex items-center">
+                <i className="ri-delete-bin-line mr-1"></i> Delete
               </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -223,7 +271,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => deleteMutation.mutate()}
-                  className="bg-red-500 hover:bg-red-600"
+                  className="bg-red-500 hover:bg-red-600 text-white"
                 >
                   Delete
                 </AlertDialogAction>
