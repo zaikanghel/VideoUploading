@@ -21,7 +21,7 @@ export interface IStorage {
   deleteVideo(id: number): Promise<boolean>;
   listVideos(limit: number, offset: number): Promise<Video[]>;
   incrementViews(videoId: string): Promise<void>;
-  saveVideoFile(videoId: string, fileStream: NodeJS.ReadableStream, filename: string): Promise<string>;
+  saveVideoFile(videoId: string, fileStream: NodeJS.ReadableStream, filename: string, title?: string): Promise<string>;
 }
 
 export class MemStorage implements IStorage {
@@ -135,9 +135,20 @@ export class MemStorage implements IStorage {
     this.videos.set(video.id, updatedVideo);
   }
 
-  async saveVideoFile(videoId: string, fileStream: NodeJS.ReadableStream, filename: string): Promise<string> {
+  async saveVideoFile(videoId: string, fileStream: NodeJS.ReadableStream, filename: string, title?: string): Promise<string> {
     const fileExtension = path.extname(filename);
-    const safeFilename = `${videoId}${fileExtension}`;
+    
+    // Use title for filename if provided, otherwise use videoId
+    let safeFilename;
+    if (title) {
+      // Ensure the title is safe to use as a filename by removing invalid characters
+      let safeTitle = title.replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
+      if (safeTitle.length === 0) safeTitle = videoId; // Fallback if title becomes empty
+      safeFilename = `${safeTitle}${fileExtension}`;
+    } else {
+      safeFilename = `${videoId}${fileExtension}`;
+    }
+    
     const filePath = path.join(this.videoStoragePath, safeFilename);
     
     const fileWriteStream = fs.createWriteStream(filePath);

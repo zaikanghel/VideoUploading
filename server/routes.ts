@@ -99,7 +99,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Move the file from temp to permanent storage
       const fileExtension = path.extname(req.file.originalname);
-      const safeFilename = `${videoId}${fileExtension}`;
+      
+      // Ensure the title is safe to use as a filename by removing invalid characters
+      let safeTitle = title.replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
+      if (safeTitle.length === 0) safeTitle = videoId; // Fallback if title becomes empty
+      
+      const safeFilename = `${safeTitle}${fileExtension}`;
       const permanentPath = path.join(uploadsDir, safeFilename);
       
       fs.renameSync(req.file.path, permanentPath);
@@ -237,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           </style>
         </head>
         <body>
-          <video controls autoplay src="/uploads/${video.videoId}${path.extname(video.filename)}"></video>
+          <video controls autoplay src="/uploads/${path.basename(video.filePath)}"></video>
         </body>
         </html>
       `;
